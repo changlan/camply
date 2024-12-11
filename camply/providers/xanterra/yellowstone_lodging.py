@@ -63,6 +63,8 @@ class Yellowstone(BaseProvider):
         all_resort_availability_data = self.make_yellowstone_request(
             endpoint=api_endpoint, params=query_dict
         )
+        if not all_resort_availability_data.get(YellowstoneConfig.BOOKING_AVAILABILITY):
+            all_resort_availability_data[YellowstoneConfig.BOOKING_AVAILABILITY] = {}
         return all_resort_availability_data
 
     @staticmethod
@@ -88,9 +90,7 @@ class Yellowstone(BaseProvider):
         dict
         """
         yellowstone_headers = {}
-        user_agent = {
-            "User-Agent": UserAgent(use_external_data=False, browsers=["chrome"]).chrome
-        }
+        user_agent = {"User-Agent": UserAgent(browsers=["chrome"]).random}
         yellowstone_headers.update(user_agent)
         yellowstone_headers.update(STANDARD_HEADERS)
         yellowstone_headers.update(YellowstoneConfig.API_REFERRERS)

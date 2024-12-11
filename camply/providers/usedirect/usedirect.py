@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import ratelimit
+from fake_useragent import UserAgent
 from pydantic import ValidationError
 
 from camply.config import FileConfig
@@ -303,11 +304,12 @@ class UseDirectProvider(BaseProvider, ABC):
         -------
         UseDirectAvailabilityResponse
         """
+        greatest_start = max(start_date, date.today() - timedelta(days=1))
         data = {
             "IsADA": is_ada,
             "MinVehicleLength": min_vehicle_length,
             "UnitCategoryId": unit_category_id,
-            "StartDate": start_date.strftime(UseDirectConfig.DATE_FORMAT),
+            "StartDate": greatest_start.strftime(UseDirectConfig.DATE_FORMAT),
             "WebOnly": web_only,
             "UnitTypesGroupIds": []
             if unit_type_group_ids is None
@@ -322,6 +324,8 @@ class UseDirectProvider(BaseProvider, ABC):
             key: value for key, value in data.items() if value not in [None, [], ""]
         }
         url = f"{self.base_url}/{self.rdr_path}/{UseDirectConfig.AVAILABILITY_ENDPOINT}"
+        random_ua = UserAgent(browsers=["chrome"]).random
+        self.json_headers["User-Agent"] = random_ua
         response = self.make_http_request_retry(
             url=url,
             method="POST",
